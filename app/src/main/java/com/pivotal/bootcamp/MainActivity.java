@@ -30,7 +30,7 @@ public class MainActivity extends ActionBarActivity {
     String key = "agbnsnx7rn5cegxxhv5z3dar";
     String value = "";
     String urlPrefix = "http://api.remix.bestbuy.com/v1/products(longDescription=";
-    String urlPostfix="*)?show=sku,name,regularPrice&pageSize=15&page=5&format=json&apiKey=";
+    String urlPostfix="*)?show=sku,name,regularPrice,mediumImage,largeImage,longDescription,shortDescription&pageSize=15&page=5&format=json&apiKey=";
 
 
     @Override
@@ -43,8 +43,8 @@ public class MainActivity extends ActionBarActivity {
         final RequestQueue queue = Volley.newRequestQueue(this);
         final ListView searchResultList = (ListView) findViewById(R.id.listView);
 
-        final ArrayList<String> list = new ArrayList<String>();
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list);
+        final ArrayList<BestBuyItem> list = new ArrayList<BestBuyItem>();
+        final SearchListAdapter arrayAdapter = new SearchListAdapter(getApplicationContext(), list);
         searchResultList.setAdapter(arrayAdapter);
 
         searchBtn.setOnClickListener(new View.OnClickListener() {
@@ -58,13 +58,15 @@ public class MainActivity extends ActionBarActivity {
                             @Override
                             public void onResponse(String response) {
                                 try {
+                                    list.clear();
                                     JSONObject jsonObject = new JSONObject(response);
                                     JSONArray jsonArray = jsonObject.getJSONArray("products");
                                     for (int i = 0; i < jsonArray.length(); i++) {
                                         JSONObject obj = jsonArray.getJSONObject(i);
-//                                        Log.d("Retail App", obj.toString());
-                                        String listString = obj.getString("name") + " - " + obj.getString("regularPrice");
-                                        list.add(listString);
+                                        BestBuyItem item = new BestBuyItem(obj.getString("name"), obj.getDouble("regularPrice"),
+                                                obj.getString("shortDescription"), obj.getString("longDescription"),
+                                                obj.getString("sku"), obj.getString("mediumImage"), obj.getString("largeImage"));
+                                        list.add(item);
                                     }
 
                                     arrayAdapter.notifyDataSetChanged();
