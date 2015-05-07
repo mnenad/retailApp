@@ -1,11 +1,14 @@
 package com.pivotal.bootcamp;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -46,6 +49,21 @@ public class MainActivity extends ActionBarActivity {
         final ArrayList<BestBuyItem> list = new ArrayList<BestBuyItem>();
         final SearchListAdapter arrayAdapter = new SearchListAdapter(getApplicationContext(), list);
         searchResultList.setAdapter(arrayAdapter);
+
+//        final Context context = this;
+        searchResultList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                BestBuyItem obj = list.get(position);
+                Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
+
+                intent.putExtra("NAME", obj.getName());
+                intent.putExtra("PRICE", obj.getPrice());
+                intent.putExtra("DESC", obj.getLongDesc());
+                intent.putExtra("LGIMG", obj.getImageUrl());
+                startActivity(intent);
+            }
+        });
 
         searchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
