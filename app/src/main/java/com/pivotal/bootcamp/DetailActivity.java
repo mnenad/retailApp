@@ -29,6 +29,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class DetailActivity extends ActionBarActivity implements OnMapReadyCallback {
 
     /*TODO:
@@ -44,10 +47,11 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
      */
 
     private static final String urlPrefix = "http://api.remix.bestbuy.com/v1/stores(area(";
-    private static final String urlSuffix = ",10))?format=json&apiKey=agbnsnx7rn5cegxxhv5z3dar&show=storeId,name,lat,lng";
+    private static final String urlSuffix = ",10))?format=json&apiKey=agbnsnx7rn5cegxxhv5z3dar&show=storeId,name,lat,lng,distance";
     private LocationManager lManager;
     private MapFragment mMapFragment;
     //Latlng values for New York City - Best Buy API is States only
+    private StoreLocation[] closestStoreLocations;
     private double latitude = 40.71;
     private double longitude = -74.0;
 
@@ -57,7 +61,15 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                 .position(new LatLng(latitude, longitude))
                 .title("Your Current Location"));
 
-        CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 9);
+        if (closestStoreLocations != null) {
+            for (StoreLocation storeLocation : closestStoreLocations) {
+                googleMap.addMarker(new MarkerOptions()
+                        .position(storeLocation.location)
+                        .title(storeLocation.name + " - " + String.valueOf(storeLocation.distanceFromCurrentLocation) + " miles away"));
+            }
+        }
+
+        CameraUpdate camUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 11);
         googleMap.animateCamera(camUpdate);
     }
 
@@ -80,6 +92,7 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
         Double price = intent.getDoubleExtra("PRICE", 0);
         String imageUrl = intent.getStringExtra("LGIMG");
         String description = intent.getStringExtra("DESC");
+        String sku = intent.getStringExtra("sku");
 
         TextView pName = (TextView) findViewById(R.id.productName);
         TextView pPrice = (TextView) findViewById(R.id.productPrice);
@@ -120,8 +133,22 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Log.d("Store API Call", response);
-                        Toast.makeText(DetailActivity.this, response, Toast.LENGTH_SHORT).show();
+                        try {
+                            closestStoreLocations = new StoreLocation[3];
+                            JSONObject jsonObject = new JSONObject(response);
+                            JSONArray jsonArray = jsonObject.getJSONArray("stores");
+
+                            for (int i = 0; i < closestStoreLocations.length; i++) {
+                                JSONObject store = jsonArray.getJSONObject(i);
+                                LatLng location = new LatLng(store.getDouble("lat"), store.getDouble("lng"));
+                                String name = store.getString("name");
+                                Double dist = store.getDouble("distance"); //Default is Miles, not km
+                                closestStoreLocations[i] = new StoreLocation(location, name, dist);
+                            }
+                            mMapFragment.getMapAsync(DetailActivity.this);
+                        } catch (Exception e) {
+                            Log.d("Store API Call", e.toString());
+                        }
                     }
                 },
                 new Response.ErrorListener() {

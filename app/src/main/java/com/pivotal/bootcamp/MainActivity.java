@@ -61,6 +61,7 @@ public class MainActivity extends ActionBarActivity {
                 intent.putExtra("PRICE", obj.getPrice());
                 intent.putExtra("DESC", obj.getLongDesc());
                 intent.putExtra("LGIMG", obj.getImageUrl());
+                intent.putExtra("sku", obj.getSku());
                 startActivity(intent);
             }
         });
