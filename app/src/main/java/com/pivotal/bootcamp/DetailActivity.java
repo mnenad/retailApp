@@ -32,7 +32,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class DetailActivity extends ActionBarActivity implements OnMapReadyCallback {
+public class DetailActivity extends ActionBarActivity implements OnMapReadyCallback, LocationListener {
 
     /*TODO:
     1. in onCreate, access location using hardware GPS (there's documention on the Google page for this)
@@ -79,14 +79,14 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
         setContentView(R.layout.activity_detail);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("New Search");
-//*
+
         mMapFragment = MapFragment.newInstance();
         FragmentTransaction fragmentTransaction =
                 getFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.map, mMapFragment);
         fragmentTransaction.commit();
         mMapFragment.getMapAsync(this);
-//*/
+
         Intent intent = getIntent();
         String name = intent.getStringExtra("NAME");
         Double price = intent.getDoubleExtra("PRICE", 0);
@@ -104,14 +104,15 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
         pDesc.setText(description);
         new ImageDownloader(pImage).execute(imageUrl);
 
-        //For Location tracking - implement LocationListener in order to get location updates from the phone's hardware
-//        lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-//        lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 0, this);
-//        Location currentLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-//
-//        if (currentLocation != null) {
-//            updateLatLng(currentLocation);
-//        }
+       // For Location tracking - implement LocationListener in order to get location updates from the phone's hardware
+        lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, (LocationListener) this);
+        Location currentLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+
+        if (currentLocation != null) {
+            updateLatLng(currentLocation);
+        }
 
         String url = urlPrefix+String.valueOf(latitude)+","+String.valueOf(longitude)+urlSuffix;
         getBestBuyLocations(url);
@@ -184,5 +185,29 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
             this.finish();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+
+        String url = urlPrefix+String.valueOf(latitude)+","+String.valueOf(longitude)+urlSuffix;
+        getBestBuyLocations(url);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
     }
 }
