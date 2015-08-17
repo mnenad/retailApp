@@ -47,7 +47,7 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
      */
 
     private static final String urlPrefix = "http://api.remix.bestbuy.com/v1/stores(area(";
-    private static final String urlSuffix = ",10))?format=json&apiKey=agbnsnx7rn5cegxxhv5z3dar&show=storeId,name,lat,lng,distance";
+    private static final String urlSuffix = ",10))?format=json&apiKey=agbnsnx7rn5cegxxhv5z3dar&show=storeId,name,lat,lng,distance,phone";
     private LocationManager lManager;
     private MapFragment mMapFragment;
     //Latlng values for New York City - Best Buy API is States only
@@ -145,6 +145,13 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                                 String name = store.getString("name");
                                 Double dist = store.getDouble("distance"); //Default is Miles, not km
                                 closestStoreLocations[i] = new StoreLocation(location, name, dist);
+
+                                if (i == 0) {
+                                    String phone = store.getString("phone");
+                                    String locationName=name;
+                                    Double locationDistance=dist;
+                                    Log.d("Closest Store is", locationName);
+                                }
                             }
                             mMapFragment.getMapAsync(DetailActivity.this);
                         } catch (Exception e) {

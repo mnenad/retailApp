@@ -28,6 +28,9 @@ import org.json.JSONStringer;
 
 import java.util.ArrayList;
 
+import io.pivotal.android.push.Push;
+import io.pivotal.android.push.registration.RegistrationListener;
+
 
 public class MainActivity extends ActionBarActivity {
     String key = "agbnsnx7rn5cegxxhv5z3dar";
@@ -35,11 +38,59 @@ public class MainActivity extends ActionBarActivity {
     String urlPrefix = "http://api.remix.bestbuy.com/v1/products(longDescription=";
     String urlPostfix="*)?show=sku,name,regularPrice,mediumImage,largeImage,longDescription,shortDescription&pageSize=15&page=5&format=json&apiKey=";
 
+    static String deviceId="none";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//todo: old way with compile 'io.pivotal.android:push:1.3.0' in build.gradle
+/*
+        //push notifications stuff
+        try {
+            // RegistrationListener is optional and may be `null`.
+
+            Push.getInstance(this).startRegistration(null, null, new RegistrationListener() {
+
+                @Override
+                public void onRegistrationComplete() {
+                    Log.i("MyLogTag", "Registration with PCF Push successful.");
+                }
+
+                @Override
+                public void onRegistrationFailed(String reason) {
+                    Log.e("MyLogTag", "Registration with PCF Push failed: " + reason);
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e("MyLogTag", "Registration with PCF Push failed: " + e);
+        }
+*/
+//todo: new way with compile 'io.pivotal.android:push:1.3.2' in build.gradle
+        deviceId=Push.getInstance(this).getDeviceUuid();
+        Log.i("MyLogTag", "Device Uuid: " + deviceId);
+
+        //push notifications stuff
+        try {
+            // RegistrationListener is optional and may be `null`.
+            Log.i("MyLogTag", "Device Uuid: " + Push.getInstance(this).getDeviceUuid());
+            Push.getInstance(this).startRegistration(null, null, true, new RegistrationListener() {
+
+                @Override
+                public void onRegistrationComplete() {
+                    Log.i("MyLogTag", "Registration with PCF Push successful.");
+                }
+
+                @Override
+                public void onRegistrationFailed(String reason) {
+                    Log.e("MyLogTag", "Registration with PCF Push failed: " + reason);
+                }
+
+            });
+        } catch (Exception e) {
+            Log.e("MyLogTag", "Registration with PCF Push failed: " + e);
+        }
 
         final EditText searchField = (EditText) findViewById(R.id.editText);
         Button searchBtn = (Button) findViewById(R.id.button);
