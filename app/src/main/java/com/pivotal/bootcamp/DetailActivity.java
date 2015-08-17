@@ -145,12 +145,11 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                                 String name = store.getString("name");
                                 Double dist = store.getDouble("distance"); //Default is Miles, not km
                                 closestStoreLocations[i] = new StoreLocation(location, name, dist);
-
+                                //quick fix to send a message for nearest store
                                 if (i == 0) {
-                                    String phone = store.getString("phone");
-                                    String locationName=name;
-                                    Double locationDistance=dist;
-                                    Log.d("Closest Store is", locationName);
+                                    String storeId=store.getString("storeId");
+                                    String pushMessage="Check the nearest store & weekly flyer at: http://stores.bestbuy.com/"+storeId;
+                                    Log.d("Push Message", pushMessage);
                                 }
                             }
                             mMapFragment.getMapAsync(DetailActivity.this);
