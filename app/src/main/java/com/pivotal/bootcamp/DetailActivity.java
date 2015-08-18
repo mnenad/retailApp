@@ -150,6 +150,8 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                                     String storeId=store.getString("storeId");
                                     String pushMessage="Check the nearest store & weekly flyer at: http://stores.bestbuy.com/"+storeId;
                                     Log.d("Push Message", pushMessage);
+                                    //todo call the proxy service
+                                    //String proxyServiceUrl=http://pushsender.cfapps.io/push?deviceId=2fee7b91-0a08-45f8-968d-81d31cac4355&message=+pushMessage;
                                 }
                             }
                             mMapFragment.getMapAsync(DetailActivity.this);
