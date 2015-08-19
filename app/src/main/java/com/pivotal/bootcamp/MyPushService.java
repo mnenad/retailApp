@@ -4,11 +4,14 @@ import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import io.pivotal.android.push.service.GcmService;
@@ -19,6 +22,7 @@ public class MyPushService extends GcmService {
     public void onReceiveMessage(Bundle payload) {
         if (payload.containsKey("message")) {
             final String message = payload.getString("message");
+//            final String url = payload.getString("url");
             handleMessage(message);
         }
     }
@@ -31,19 +35,64 @@ public class MyPushService extends GcmService {
 
         final String pushMsg = msg;
 
-        Handler mHandler = new Handler(getMainLooper());
-        mHandler.post(new Runnable() {
+        if (pushMsg.indexOf("http")>0) {
+            final String pushUrl = msg.substring(msg.indexOf("http"), msg.length()-1);
+            Handler mHandler = new Handler(getMainLooper());
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
 
-            @Override
-            public void run() {
-                Toast.makeText(getApplicationContext(), pushMsg, Toast.LENGTH_LONG).show();
-//                new AlertDialog.Builder(getApplicationContext())
-//                        .setTitle("Push Notification")
-//                        .setMessage(pushMsg)
-//                        .create()
-//                        .show();
-            }
-        });
+                    AlertDialog pushAlert = new AlertDialog.Builder(getApplicationContext())
+                            .setTitle("Push Notification")
+                            .setMessage(pushMsg)
+                            .setPositiveButton("GO", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                    intent.setData(Uri.parse(pushUrl));
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                }
+                            })
+                            .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                    .create();
+                    pushAlert.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                    pushAlert.show();
+
+                }
+            });
+        }else{
+            //Toast.makeText(getApplicationContext(), pushMsg, Toast.LENGTH_LONG).show();
+            //my change : todo: test this
+            Handler mHandler = new Handler(getMainLooper());
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+
+                    AlertDialog pushAlert = new AlertDialog.Builder(getApplicationContext())
+                            .setTitle("Push Notification")
+                            .setMessage(pushMsg)
+                            .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .create();
+                    pushAlert.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                    pushAlert.show();
+
+                }
+            });
+
+            //my change end
+
+        }
 
     }
 

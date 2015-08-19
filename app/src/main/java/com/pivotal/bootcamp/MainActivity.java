@@ -44,7 +44,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//todo: old way with compile 'io.pivotal.android:push:1.3.0' in build.gradle
+//delete: old way with compile 'io.pivotal.android:push:1.3.0' in build.gradle
 /*
         //push notifications stuff
         try {
@@ -67,7 +67,7 @@ public class MainActivity extends ActionBarActivity {
             Log.e("MyLogTag", "Registration with PCF Push failed: " + e);
         }
 */
-//todo: new way with compile 'io.pivotal.android:push:1.3.2' in build.gradle
+//new way with compile 'io.pivotal.android:push:1.3.2' in build.gradle
         deviceId=Push.getInstance(this).getDeviceUuid();
         Log.i("MyLogTag", "Device Uuid: " + deviceId);
 

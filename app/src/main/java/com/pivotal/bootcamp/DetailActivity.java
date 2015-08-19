@@ -34,7 +34,7 @@ import org.json.JSONObject;
 
 public class DetailActivity extends ActionBarActivity implements OnMapReadyCallback, LocationListener {
 
-    /*TODO:
+    /*
     1. in onCreate, access location using hardware GPS (there's documention on the Google page for this)
     2. Extract that information and get it in lat, lng format
     3. Update the apiUrl in store(areax,y) line
