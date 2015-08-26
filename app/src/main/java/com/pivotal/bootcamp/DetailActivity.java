@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,10 +28,13 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import retrofit.RestAdapter;
 
 public class DetailActivity extends ActionBarActivity implements OnMapReadyCallback, LocationListener {
 
@@ -104,8 +108,8 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
         pDesc.setText(description);
         new ImageDownloader(pImage).execute(imageUrl);
 
-       // For Location tracking - implement LocationListener in order to get location updates from the phone's hardware
-        lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        // For Location tracking - implement LocationListener in order to get location updates from the phone's hardware
+        lManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, (LocationListener) this);
         Location currentLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
@@ -114,7 +118,7 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
             updateLatLng(currentLocation);
         }
 
-        String url = urlPrefix+String.valueOf(latitude)+","+String.valueOf(longitude)+urlSuffix;
+        String url = urlPrefix + String.valueOf(latitude) + "," + String.valueOf(longitude) + urlSuffix;
         getBestBuyLocations(url);
 
     }
@@ -122,9 +126,9 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
     private void updateLatLng(Location location) {
         latitude = Math.round(location.getLatitude());
         longitude = Math.round(location.getLongitude());
-        Toast.makeText(this, latitude+" "+longitude, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, latitude + " " + longitude, Toast.LENGTH_SHORT).show();
 
-        String url = urlPrefix+String.valueOf(latitude)+","+String.valueOf(longitude)+urlSuffix;
+        String url = urlPrefix + String.valueOf(latitude) + "," + String.valueOf(longitude) + urlSuffix;
         getBestBuyLocations(url);
     }
 
@@ -138,7 +142,7 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                             closestStoreLocations = new StoreLocation[3];
                             JSONObject jsonObject = new JSONObject(response);
                             JSONArray jsonArray = jsonObject.getJSONArray("stores");
-
+                            String closestStoreURL = "http://stores.bestbuy.com/";
                             for (int i = 0; i < closestStoreLocations.length; i++) {
                                 JSONObject store = jsonArray.getJSONObject(i);
                                 LatLng location = new LatLng(store.getDouble("lat"), store.getDouble("lng"));
@@ -147,14 +151,28 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                                 closestStoreLocations[i] = new StoreLocation(location, name, dist);
                                 //quick fix to send a message for nearest store
                                 if (i == 0) {
-                                    String storeId=store.getString("storeId");
-                                    String pushMessage="Check the nearest store & weekly flyer at: http://stores.bestbuy.com/"+storeId;
-                                    Log.d("Push Message", pushMessage);
-                                    //todo call the proxy service
-                                    //String proxyServiceUrl=http://pushsender.cfapps.io/push?deviceId=2fee7b91-0a08-45f8-968d-81d31cac4355&message=+pushMessage;
+                                    String storeId = store.getString("storeId");
+                                    closestStoreURL = "http://stores.bestbuy.com/" + storeId;
+                                    Log.d("Closest store URL:", closestStoreURL);
                                 }
                             }
+                            final String finalEndPoint = "http://pushsender.cfapps.io/push?deviceId=2fee7b91-0a08-45f8-968d-81d31cac4355&message=" + closestStoreURL;
                             mMapFragment.getMapAsync(DetailActivity.this);
+                            mMapFragment.getMapAsync(new OnMapReadyCallback() {
+                                @Override
+                                public void onMapReady(GoogleMap googleMap) {
+                                    //todo call the proxy service
+                                    googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                                        @Override
+                                        public boolean onMarkerClick(Marker marker) {
+                                            Log.d("Push REST API Call", finalEndPoint);
+                                            executeRest(finalEndPoint);
+                                            return false;
+                                        }
+                                    });
+                                }
+
+                            });
                         } catch (Exception e) {
                             Log.d("Store API Call", e.toString());
                         }
@@ -169,6 +187,12 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
                 });
 
         queue.add(stringRequest);
+    }
+
+    private void executeRest(String url) {
+        BackgroundTask task = new BackgroundTask();
+        task.setString(url);
+        task.execute();
     }
 
     @Override
@@ -200,7 +224,7 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
         latitude = location.getLatitude();
         longitude = location.getLongitude();
 
-        String url = urlPrefix+String.valueOf(latitude)+","+String.valueOf(longitude)+urlSuffix;
+        String url = urlPrefix + String.valueOf(latitude) + "," + String.valueOf(longitude) + urlSuffix;
         getBestBuyLocations(url);
     }
 
@@ -217,5 +241,35 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+
+    private class BackgroundTask extends AsyncTask<Void, Void, SomePOJO>{
+         //   SomePOJO> {
+        RestAdapter restAdapter;
+        String mUrl = "";
+
+        public void setString(String url){
+            this.mUrl = url;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            Log.d(getClass().getSimpleName(), "ON PREEXECUTE");
+            restAdapter = new RestAdapter.Builder()
+                    .setEndpoint(mUrl)
+                    .build();
+        }
+
+        @Override
+        protected SomePOJO doInBackground(Void... params) {
+            IApiMethods methods = restAdapter.create(IApiMethods.class);
+            SomePOJO curators = methods.getCurators(null);
+            return curators;
+        }
+
+        @Override
+        protected void onPostExecute(SomePOJO curators) {
+            Log.d(getClass().getSimpleName(), "SUCCESS CALL " + curators.title + " : " + curators.dataset);
+        }
     }
 }

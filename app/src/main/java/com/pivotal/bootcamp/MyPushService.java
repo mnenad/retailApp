@@ -20,9 +20,10 @@ public class MyPushService extends GcmService {
 
     @Override
     public void onReceiveMessage(Bundle payload) {
+        Log.i("onReceiveMessage", "Received payload: " + payload);
         if (payload.containsKey("message")) {
             final String message = payload.getString("message");
-//            final String url = payload.getString("url");
+            Log.i("onReceiveMessage", "message: " + message);
             handleMessage(message);
         }
     }
@@ -30,12 +31,13 @@ public class MyPushService extends GcmService {
     private void handleMessage(String msg) {
         // Your code here. Display the message
         // on the device's bar as a notification.
-        Log.i("MyLogTag", "Received message: " + msg);
+        Log.i("handleMessage", "message: " + msg);
         showNotificationOnStatusBar(msg);
 
         final String pushMsg = msg;
 
-        if (pushMsg.indexOf("http")>0) {
+        if (pushMsg.indexOf("http")>=0) {
+            Log.i("handleMessage", "http found in the message: " + pushMsg);
             final String pushUrl = msg.substring(msg.indexOf("http"), msg.length()-1);
             Handler mHandler = new Handler(getMainLooper());
             mHandler.post(new Runnable() {
@@ -43,7 +45,7 @@ public class MyPushService extends GcmService {
                 public void run() {
 
                     AlertDialog pushAlert = new AlertDialog.Builder(getApplicationContext())
-                            .setTitle("Push Notification")
+                            .setTitle("Push Notification URL")
                             .setMessage(pushMsg)
                             .setPositiveButton("GO", new DialogInterface.OnClickListener() {
                                 @Override
@@ -69,6 +71,7 @@ public class MyPushService extends GcmService {
         }else{
             //Toast.makeText(getApplicationContext(), pushMsg, Toast.LENGTH_LONG).show();
             //my change : todo: test this
+            Log.i("handleMessage", "http NOT found in the message: " + pushMsg);
             Handler mHandler = new Handler(getMainLooper());
             mHandler.post(new Runnable() {
                 @Override
