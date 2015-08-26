@@ -32,6 +32,11 @@ public class MyPushService extends GcmService {
         // Your code here. Display the message
         // on the device's bar as a notification.
         Log.i("handleMessage", "message: " + msg);
+        if (msg.indexOf("get/curators.json")>0){
+            msg=msg.substring(0,msg.indexOf("get/curators.json"));
+            Log.i("handleMessage", "Cleaned up message: " + msg);
+
+        }
         showNotificationOnStatusBar(msg);
 
         final String pushMsg = msg;
@@ -45,7 +50,7 @@ public class MyPushService extends GcmService {
                 public void run() {
 
                     AlertDialog pushAlert = new AlertDialog.Builder(getApplicationContext())
-                            .setTitle("Push Notification URL")
+                            .setTitle("Check Weekly Ad & Store Details")
                             .setMessage(pushMsg)
                             .setPositiveButton("GO", new DialogInterface.OnClickListener() {
                                 @Override

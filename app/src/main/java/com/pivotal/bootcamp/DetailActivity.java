@@ -244,7 +244,7 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
     }
 
     private class BackgroundTask extends AsyncTask<Void, Void, SomePOJO>{
-         //   SomePOJO> {
+
         RestAdapter restAdapter;
         String mUrl = "";
 
@@ -254,10 +254,12 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
 
         @Override
         protected void onPreExecute() {
-            Log.d(getClass().getSimpleName(), "ON PREEXECUTE");
+            Log.d(getClass().getSimpleName(), "ON PREEXECUTE mUrl:"+mUrl);
+
             restAdapter = new RestAdapter.Builder()
                     .setEndpoint(mUrl)
                     .build();
+
         }
 
         @Override
@@ -265,11 +267,11 @@ public class DetailActivity extends ActionBarActivity implements OnMapReadyCallb
             IApiMethods methods = restAdapter.create(IApiMethods.class);
             SomePOJO curators = methods.getCurators(null);
             return curators;
-        }
+            }
 
         @Override
         protected void onPostExecute(SomePOJO curators) {
-            Log.d(getClass().getSimpleName(), "SUCCESS CALL " + curators.title + " : " + curators.dataset);
+            Log.d(getClass().getSimpleName(), "SUCCESS CALL " );
         }
     }
 }
